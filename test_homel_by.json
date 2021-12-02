@@ -1,0 +1,2237 @@
+{
+	"info": {
+		"_postman_id": "4b76afde-c639-4d90-ba7c-5649d9054bf0",
+		"name": "профлист.бел",
+		"description": "<h3>Последовательность действий</h3>\n<ul>\n<li> создаем нового клиента (Create customer); </li>\n<li> создаем новый адрес клиента (и номер телефона) (Create address); </li>\n<li> выбирает для заказа рандомно один товар с базовыми атрибутами (All products, Product random); </li>\n<li> проверяем количество товара на складе до заказа (Id stock, Stock quantity); </li>\n<li> создаем корзину для созданного клиента, адреса и выбранного товара (Create cart); </li>\n<li> отправляем заказ с созданным клиентом, адресом, корзиной и выбранным товаром (Create order); </li>\n<li> проверяем правильность уменьшения остатка товара (остаток-заказ=новый остаток) (Stock quantity after order); </li>\n<li> в базе данных Mysql изменяем значения в таблице «orders». В строке найти id заказа, который был заказан (id_order) и изменить значения «current_state» на «6» (заказ отменен) и «valid» на «0». Этот шаг нужен, чтобы в таблице «stock_available» отменить списание количества товара в заказе. Если заказ просто удалить, остаток заказанного товара не вернется к старому значение (которое было до заказа).  Подробнее здесь \nhttps://docs.google.com/document/d/1UV1F-XmS5BBfK9EZ4TnLbaHhtreJLqgzU-GM_cY5mRw/;</li>\n<li> удаляем созданного клиента, адрес, корзину и заказ (Delete customer, Delete address, Delete cart, Delete order).</li>\n</ul>\n\n \nПодробная документация по API Prestashop по ссылке:\nhttps://devdocs.prestashop.com/1.7/webservice/\nНа сервере настроена возможность отправлять/принимать Json-запросы.\n \n\n<h3>Методы запросов</h3>\n\n<table>\n<thead>\n<tr>\n<th>HTTP/REST</th>\n<th>CRUD</th>\n<th>SQL</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>POST</td>\n<td>Create</td>\n<td>INSERT</td>\n</tr>\n<tr>\n<td>GET</td>\n<td>Read</td>\n<td>SELECT</td>\n</tr>\n<tr>\n<td>PUT</td>\n<td>Update</td>\n<td>UPDATE</td>\n</tr>\n<tr>\n<td>DELETE</td>\n<td>Delete</td>\n<td>DELETE</td>\n</tr>\n</tbody>\n</table>\n\n<h3>Аутентификация</h3>\nКак создать/получить доступ к веб-сервису:\nhttps://devdocs.prestashop.com/1.7/webservice/tutorials/creating-access/\nТестовый Api Key – PTX9C4NHSAZXD53TDALTFN1WLBJS7KLK (только для Get-запросов, для создания ключа с возможностью отправки put/post/delete-запросов обратитесь к администратору).\n\nНастройки авторизации: \nType – API Key\nKey – ws_key\nValue - <key>\n\n<h3>Ресурсы и фильтры</h3>\n{{http_schema}}{{url}} – в ответ на запрос приходит Json со всеми эндпоинтами (ресурсами).\n{{http_schema}}{{url}}/products?schema=blank – возвращает пустые данные по умолчанию, которые вы можете использовать в качестве основы для запросов.\nПодробнее о ресурсах и типах запросов:\nhttps://devdocs.prestashop.com/1.7/webservice/reference/\nhttps://devdocs.prestashop.com/1.7/webservice/resources/\n\nМожно использовать фильтры в url:\n{{http_schema}}{{url}}/products?filter[active]=![0] – отображаются только товары, значение которых не равно 0 в ключе «active@\n{{http_schema}}{{url}}/stock_availables?filter[id_product]=[{{product_id}}]& filter[id_product_attribute]=[0] – выводится только товар с id_product = переменной {{product_id}} из окружения и id_product_attribute=0\nПодробнее о фильтрах:\nhttps://devdocs.prestashop.com/1.7/webservice/getting-started/\n\n<h3>Тип передаваемой и получаемой информации (accept, content-type)</h3>\nКаждый запрос, как ожидает, так и отвечает application/json",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create",
+			"item": [
+				{
+					"name": "Create customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.environment.set(\"customer_id\", jsonData.customer.id);\r",
+									"pm.environment.set(\"customer_secure_key\", jsonData.customer.secure_key);\r",
+									"pm.environment.set(\"customer_lastname\", jsonData.customer.lastname);\r",
+									"pm.environment.set(\"customer_firstname\", jsonData.customer.firstname);\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"lastname customer_response = lastname customer_request\", function () {\r",
+									"    pm.expect(jsonData.customer.lastname).to.eql(JSON.parse(request.data).customer.lastname);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"firstname customer_response = firstname customer_request\", function () {\r",
+									"    pm.expect(jsonData.customer.firstname).to.eql(JSON.parse(request.data).customer.firstname);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"email customer_response = email customer_request\", function () {\r",
+									"    pm.expect(jsonData.customer.email).to.eql(JSON.parse(request.data).customer.email);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"customer\": {\r\n        \"id\": \"\",\r\n        \"id_default_group\": \"2\",\r\n        \"id_lang\": \"1\",\r\n        \"newsletter_date_add\": \"\",\r\n        \"ip_registration_newsletter\": \"\",\r\n        \"last_passwd_gen\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"deleted\": \"\",\r\n        \"passwd\": \"\",\r\n        \"lastname\": \"{{$randomLastName}}\",\r\n        \"firstname\": \"{{$randomFirstName}}\",\r\n        \"email\": \"{{$randomEmail}}\",\r\n        \"id_gender\": \"\",\r\n        \"birthday\": \"\",\r\n        \"newsletter\": \"\",\r\n        \"optin\": \"\",\r\n        \"website\": \"\",\r\n        \"company\": \"\",\r\n        \"siret\": \"\",\r\n        \"ape\": \"\",\r\n        \"outstanding_allow_amount\": \"\",\r\n        \"show_public_prices\": \"\",\r\n        \"id_risk\": \"\",\r\n        \"max_payment_days\": \"\",\r\n        \"active\": \"1\",\r\n        \"note\": \"\",\r\n        \"is_guest\": \"1\",\r\n        \"id_shop\": \"1\",\r\n        \"id_shop_group\": \"1\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"legal_entity\": \"\",\r\n        \"associations\": {\r\n            \"groups\": [\r\n                {\r\n                    \"id\": \"2\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/customers",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"customers"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Создаем нового покупателя. Из ответа берем Id customer."
+					},
+					"response": []
+				},
+				{
+					"name": "Create address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.environment.set(\"address_id\", jsonData.address.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"phone address_response = phone address_request\", function () {\r",
+									"    pm.expect(jsonData.address.phone).to.eql(JSON.parse(request.data).address.phone);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"address\": {\r\n        \"id\": \"\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_manufacturer\": \"\",\r\n        \"id_supplier\": \"\",\r\n        \"id_warehouse\": \"\",\r\n        \"id_country\": \"52\",\r\n        \"id_state\": \"\",\r\n        \"alias\": \"My address\",\r\n        \"company\": \"\",\r\n        \"lastname\": \"{{customer_lastname}}\",\r\n        \"firstname\": \"{{customer_firstname}}\",\r\n        \"vat_number\": \"\",\r\n        \"address1\": \"{{$randomStreetAddress}}\",\r\n        \"address2\": \"\",\r\n        \"postcode\": \"\",\r\n        \"city\": \"{{$randomCity}}\",\r\n        \"other\": \"\",\r\n        \"phone\": \"{{$randomPhoneNumber}}\",\r\n        \"phone_mobile\": \"\",\r\n        \"dni\": \"\",\r\n        \"deleted\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\"\r\n    }\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/addresses/",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"addresses",
+								""
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Создаем новый адрес клиента (и номер телефона). Из ответа берем номер телефона и адрес."
+					},
+					"response": []
+				},
+				{
+					"name": "All products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"var random = Math.floor(Math.random() * jsonData.products.length);\r",
+									"\r",
+									"pm.environment.set(\"product_id\", jsonData.products[random].id);\r",
+									"console.log(jsonData.products.length)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/products?filter[active]=![0]",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								},
+								{
+									"key": "filter[active]",
+									"value": "![0]"
+								}
+							]
+						},
+						"description": "Отображаются только товары, значение которых не равно 0 в ключе «active». На сайте есть отключенные товары, которые не видны на фронте и не могут быть заказы, но по API передаются. Чтобы не заказывать отключенные товары берем только \"active\""
+					},
+					"response": []
+				},
+				{
+					"name": "Product random",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var quantity_random = Math.ceil(Math.random()*1000)\r",
+									"pm.environment.set(\"product_sum\", (jsonData.product.price * quantity_random));\r",
+									"\r",
+									"console.log(quantity_random)\r",
+									"console.log(jsonData.product.price)\r",
+									"\r",
+									"pm.environment.set(\"product_quantity\", quantity_random);\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"product_id response = product_id request\", function () {\r",
+									"    pm.expect(+jsonData.product.id).to.eql(pm.environment.get(\"product_id\"));\r",
+									"});\r",
+									"\r",
+									"console.log(jsonData.product.id)\r",
+									"console.log(pm.environment.get(\"product_id\"))"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/products/{{product_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"products",
+								"{{product_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Выбираем для заказа рандомно один товар с базовыми атрибутами (код во вкладке Tests)."
+					},
+					"response": []
+				},
+				{
+					"name": "ID stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"stock_id\", jsonData.stock_availables[0].id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/stock_availables?filter[id_product]=[{{product_id}}]& filter[id_product_attribute]=[0]",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"stock_availables"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								},
+								{
+									"key": "filter[id_product]",
+									"value": "[{{product_id}}]"
+								},
+								{
+									"key": " filter[id_product_attribute]",
+									"value": "[0]"
+								}
+							]
+						},
+						"description": "Выбираем id в стоке, в котором хранится информация об остатке на складе базового товара ( у которого id_product_attribute=0)"
+					},
+					"response": []
+				},
+				{
+					"name": "Stock quantity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"stock_available\", jsonData.stock_available.quantity);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/stock_availables/{{stock_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"stock_availables",
+								"{{stock_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Из этой таблицы берем значение \"quantity\" - остаток базового товара на складе."
+					},
+					"response": []
+				},
+				{
+					"name": "Create cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"pm.environment.set(\"cart_id\", jsonData.cart.id);\r",
+									"//pm.environment.set(\"cart_product_id\", jsonData.cart.associations.cart_rows[0].id_product);\r",
+									"pm.environment.set(\"cart_quantity\", jsonData.cart.associations.cart_rows[0].quantity);\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"cart\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_guest\": \"\",\r\n        \"id_lang\": \"1\",\r\n        \"id_shop_group\": \"1\",\r\n        \"id_shop\": \"1\",\r\n        \"id_carrier\": \"18\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"delivery_option\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"allow_seperated_package\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"associations\": {\r\n            \"cart_rows\": [\r\n                {\r\n                    \"id_product\": \"{{product_id}}\",\r\n                    \"id_product_attribute\": \"0\",\r\n                    \"id_address_delivery\": \"{{address_id}}\",\r\n                    \"quantity\": \"{{product_quantity}}\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/carts",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"carts"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Создаем корзину с Id покупателя и ID адреса. Из ответа берем Id корзины (Id cart)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"pm.test(\"order_summ = price * quantity\", function () {\r",
+									"    pm.expect(+jsonData.order.total_paid).to.eql(jsonData.order.associations.order_rows[0].product_price * jsonData.order.associations.order_rows[0].product_quantity);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"product_id order_response = product_id order_request\", function () {\r",
+									"    pm.expect(+jsonData.order.associations.order_rows[0].product_id).to.eql(pm.environment.get(\"product_id\"));\r",
+									"});\r",
+									"\r",
+									"pm.environment.set(\"order_id\", jsonData.order.id);\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_cart\": \"{{cart_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": \"\",\r\n        \"module\": \"{{Module_payment}}\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"{{order_payment}}\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"{{product_sum}}\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"{{product_sum}}\",\r\n        \"total_products\": \"{{product_sum}}\",\r\n        \"total_products_wt\": \"{{product_sum}}\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"\",\r\n                    \"product_id\": \"\",\r\n                    \"product_attribute_id\": \"\",\r\n                    \"product_quantity\": \"\",\r\n                    \"product_name\": \"\",\r\n                    \"product_reference\": \"\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"\",\r\n                    \"unit_price_tax_incl\": \"\",\r\n                    \"unit_price_tax_excl\": \"\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/orders",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"orders"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Создаем заказ. Из ответа берет id order."
+					},
+					"response": []
+				},
+				{
+					"name": "Stock quantity after order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Stock of products - order of products = new stock of products\", function () {\r",
+									"    pm.expect(+jsonData.stock_available.quantity).to.eql(pm.environment.get(\"stock_available\") - pm.environment.get(\"product_quantity\"));\r",
+									"});\r",
+									"//console.log(pm.environment.get(\"product_quantity\"))"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/stock_availables/{{stock_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"stock_availables",
+								"{{stock_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Проверяем, что количество товара изменилось после заказа на количество заказанного товара (значение \"product_quantity\" в  response \"Create order\")."
+					},
+					"response": []
+				},
+				{
+					"name": "Check order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.test(\"order_summ = price * quantity\", function () {\r",
+									"    pm.expect(+jsonData.order.total_paid).to.eql(jsonData.order.associations.order_rows[0].product_price * jsonData.order.associations.order_rows[0].product_quantity);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"product_id order_response = product_id order_request\", function () {\r",
+									"    pm.expect(+jsonData.order.associations.order_rows[0].product_id).to.eql(pm.environment.get(\"product_id\"));\r",
+									"});\r",
+									"\r",
+									"console.log(pm.environment.get(\"product_id\"))\r",
+									"console.log(+jsonData.order.associations.order_rows[0].product_id)\r",
+									"\r",
+									"var schema = {\r",
+									"    \"$schema\": \"http://json-schema.org/draft-07/schema\",\r",
+									"    \r",
+									"    \r",
+									"    \"required\": [\r",
+									"        \"order\"\r",
+									"    ],\r",
+									"    \"properties\": {\r",
+									"        \"order\": {\r",
+									"            \"$id\": \"#/properties/order\",\r",
+									"            \"type\": \"object\",\r",
+									"            \"title\": \"The order schema\",\r",
+									"            \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"            \"default\": {},\r",
+									"            \"examples\": [\r",
+									"                {\r",
+									"                    \"id\": 547,\r",
+									"                    \"id_address_delivery\": \"1957\",\r",
+									"                    \"id_address_invoice\": \"1957\",\r",
+									"                    \"id_cart\": \"6253\",\r",
+									"                    \"id_currency\": \"1\",\r",
+									"                    \"id_lang\": \"1\",\r",
+									"                    \"id_customer\": \"10696\",\r",
+									"                    \"id_carrier\": \"18\",\r",
+									"                    \"current_state\": \"12\",\r",
+									"                    \"module\": \"cashondelivery\",\r",
+									"                    \"invoice_number\": \"322\",\r",
+									"                    \"invoice_date\": \"2021-11-07 21:01:12\",\r",
+									"                    \"delivery_number\": \"0\",\r",
+									"                    \"delivery_date\": \"0000-00-00 00:00:00\",\r",
+									"                    \"valid\": \"1\",\r",
+									"                    \"date_add\": \"2021-11-07 21:01:11\",\r",
+									"                    \"date_upd\": \"2021-11-07 21:07:59\",\r",
+									"                    \"shipping_number\": \"\",\r",
+									"                    \"id_shop_group\": \"1\",\r",
+									"                    \"id_shop\": \"1\",\r",
+									"                    \"secure_key\": \"2a70291d06f97f97aa5bef3010dc5544\",\r",
+									"                    \"payment\": \"Cash on delivery (COD)\",\r",
+									"                    \"recyclable\": \"0\",\r",
+									"                    \"gift\": \"0\",\r",
+									"                    \"gift_message\": \"\",\r",
+									"                    \"mobile_theme\": \"0\",\r",
+									"                    \"total_discounts\": \"0.000000\",\r",
+									"                    \"total_discounts_tax_incl\": \"0.000000\",\r",
+									"                    \"total_discounts_tax_excl\": \"0.000000\",\r",
+									"                    \"total_paid\": \"9408.000000\",\r",
+									"                    \"total_paid_tax_incl\": \"9408.000000\",\r",
+									"                    \"total_paid_tax_excl\": \"9408.000000\",\r",
+									"                    \"total_paid_real\": \"9408.000000\",\r",
+									"                    \"total_products\": \"9408.000000\",\r",
+									"                    \"total_products_wt\": \"9408.000000\",\r",
+									"                    \"total_shipping\": \"0.000000\",\r",
+									"                    \"total_shipping_tax_incl\": \"0.000000\",\r",
+									"                    \"total_shipping_tax_excl\": \"0.000000\",\r",
+									"                    \"carrier_tax_rate\": \"0.000\",\r",
+									"                    \"total_wrapping\": \"0.000000\",\r",
+									"                    \"total_wrapping_tax_incl\": \"0.000000\",\r",
+									"                    \"total_wrapping_tax_excl\": \"0.000000\",\r",
+									"                    \"round_mode\": \"0\",\r",
+									"                    \"round_type\": \"0\",\r",
+									"                    \"conversion_rate\": \"1.000000\",\r",
+									"                    \"reference\": \"RQTNJFAEA\",\r",
+									"                    \"associations\": {\r",
+									"                        \"order_rows\": [\r",
+									"                            {\r",
+									"                                \"id\": \"864\",\r",
+									"                                \"product_id\": \"852\",\r",
+									"                                \"product_attribute_id\": \"0\",\r",
+									"                                \"product_quantity\": \"896.00\",\r",
+									"                                \"product_name\": \"Труба профильная 60х60х2,0\",\r",
+									"                                \"product_reference\": \"852\",\r",
+									"                                \"product_ean13\": \"\",\r",
+									"                                \"product_upc\": \"\",\r",
+									"                                \"product_price\": \"10.500000\",\r",
+									"                                \"unit_price_tax_incl\": \"10.500000\",\r",
+									"                                \"unit_price_tax_excl\": \"10.500000\"\r",
+									"                            }\r",
+									"                        ]\r",
+									"                    }\r",
+									"                }\r",
+									"            ],\r",
+									"            \"required\": [\r",
+									"                \"id\",\r",
+									"                \"id_address_delivery\",\r",
+									"                \"id_address_invoice\",\r",
+									"                \"id_cart\",\r",
+									"                \"id_currency\",\r",
+									"                \"id_lang\",\r",
+									"                \"id_customer\",\r",
+									"                \"id_carrier\",\r",
+									"                \"current_state\",\r",
+									"                \"module\",\r",
+									"                \"invoice_number\",\r",
+									"                \"invoice_date\",\r",
+									"                \"delivery_number\",\r",
+									"                \"delivery_date\",\r",
+									"                \"valid\",\r",
+									"                \"date_add\",\r",
+									"                \"date_upd\",\r",
+									"                \"shipping_number\",\r",
+									"                \"id_shop_group\",\r",
+									"                \"id_shop\",\r",
+									"                \"secure_key\",\r",
+									"                \"payment\",\r",
+									"                \"recyclable\",\r",
+									"                \"gift\",\r",
+									"                \"gift_message\",\r",
+									"                \"mobile_theme\",\r",
+									"                \"total_discounts\",\r",
+									"                \"total_discounts_tax_incl\",\r",
+									"                \"total_discounts_tax_excl\",\r",
+									"                \"total_paid\",\r",
+									"                \"total_paid_tax_incl\",\r",
+									"                \"total_paid_tax_excl\",\r",
+									"                \"total_paid_real\",\r",
+									"                \"total_products\",\r",
+									"                \"total_products_wt\",\r",
+									"                \"total_shipping\",\r",
+									"                \"total_shipping_tax_incl\",\r",
+									"                \"total_shipping_tax_excl\",\r",
+									"                \"carrier_tax_rate\",\r",
+									"                \"total_wrapping\",\r",
+									"                \"total_wrapping_tax_incl\",\r",
+									"                \"total_wrapping_tax_excl\",\r",
+									"                \"round_mode\",\r",
+									"                \"round_type\",\r",
+									"                \"conversion_rate\",\r",
+									"                \"reference\",\r",
+									"                \"associations\"\r",
+									"            ],\r",
+									"            \"properties\": {\r",
+									"                \"id\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id\",\r",
+									"                    \"type\": \"integer\",\r",
+									"                    \"title\": \"The id schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": 0,\r",
+									"                    \"examples\": [\r",
+									"                        547\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_address_delivery\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_address_delivery\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_address_delivery schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1957\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_address_invoice\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_address_invoice\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_address_invoice schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1957\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_cart\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_cart\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_cart schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"6253\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_currency\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_currency\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_currency schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_lang\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_lang\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_lang schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_customer\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_customer\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_customer schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"10696\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_carrier\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_carrier\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_carrier schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"18\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"current_state\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/current_state\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The current_state schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"12\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"module\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/module\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The module schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"cashondelivery\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"invoice_number\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/invoice_number\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The invoice_number schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"322\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"invoice_date\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/invoice_date\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The invoice_date schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"2021-11-07 21:01:12\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"delivery_number\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/delivery_number\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The delivery_number schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"delivery_date\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/delivery_date\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The delivery_date schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0000-00-00 00:00:00\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"valid\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/valid\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The valid schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"date_add\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/date_add\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The date_add schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"2021-11-07 21:01:11\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"date_upd\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/date_upd\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The date_upd schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"2021-11-07 21:07:59\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"shipping_number\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/shipping_number\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The shipping_number schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_shop_group\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_shop_group\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_shop_group schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"id_shop\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/id_shop\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The id_shop schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"secure_key\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/secure_key\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The secure_key schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"2a70291d06f97f97aa5bef3010dc5544\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"payment\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/payment\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The payment schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"Cash on delivery (COD)\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"recyclable\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/recyclable\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The recyclable schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"gift\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/gift\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The gift schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"gift_message\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/gift_message\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The gift_message schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"mobile_theme\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/mobile_theme\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The mobile_theme schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_discounts\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_discounts\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_discounts schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_discounts_tax_incl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_discounts_tax_incl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_discounts_tax_incl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_discounts_tax_excl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_discounts_tax_excl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_discounts_tax_excl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_paid\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_paid\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_paid schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_paid_tax_incl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_paid_tax_incl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_paid_tax_incl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_paid_tax_excl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_paid_tax_excl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_paid_tax_excl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_paid_real\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_paid_real\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_paid_real schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_products\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_products\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_products schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_products_wt\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_products_wt\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_products_wt schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"9408.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_shipping\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_shipping\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_shipping schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_shipping_tax_incl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_shipping_tax_incl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_shipping_tax_incl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_shipping_tax_excl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_shipping_tax_excl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_shipping_tax_excl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"carrier_tax_rate\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/carrier_tax_rate\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The carrier_tax_rate schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_wrapping\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_wrapping\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_wrapping schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_wrapping_tax_incl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_wrapping_tax_incl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_wrapping_tax_incl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"total_wrapping_tax_excl\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/total_wrapping_tax_excl\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The total_wrapping_tax_excl schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"round_mode\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/round_mode\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The round_mode schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"round_type\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/round_type\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The round_type schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"0\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"conversion_rate\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/conversion_rate\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The conversion_rate schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"1.000000\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"reference\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/reference\",\r",
+									"                    \"type\": \"string\",\r",
+									"                    \"title\": \"The reference schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": \"\",\r",
+									"                    \"examples\": [\r",
+									"                        \"RQTNJFAEA\"\r",
+									"                    ]\r",
+									"                },\r",
+									"                \"associations\": {\r",
+									"                    \"$id\": \"#/properties/order/properties/associations\",\r",
+									"                    \"type\": \"object\",\r",
+									"                    \"title\": \"The associations schema\",\r",
+									"                    \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                    \"default\": {},\r",
+									"                    \"examples\": [\r",
+									"                        {\r",
+									"                            \"order_rows\": [\r",
+									"                                {\r",
+									"                                    \"id\": \"864\",\r",
+									"                                    \"product_id\": \"852\",\r",
+									"                                    \"product_attribute_id\": \"0\",\r",
+									"                                    \"product_quantity\": \"896.00\",\r",
+									"                                    \"product_name\": \"Труба профильная 60х60х2,0\",\r",
+									"                                    \"product_reference\": \"852\",\r",
+									"                                    \"product_ean13\": \"\",\r",
+									"                                    \"product_upc\": \"\",\r",
+									"                                    \"product_price\": \"10.500000\",\r",
+									"                                    \"unit_price_tax_incl\": \"10.500000\",\r",
+									"                                    \"unit_price_tax_excl\": \"10.500000\"\r",
+									"                                }\r",
+									"                            ]\r",
+									"                        }\r",
+									"                    ],\r",
+									"                    \"required\": [\r",
+									"                        \"order_rows\"\r",
+									"                    ],\r",
+									"                    \"properties\": {\r",
+									"                        \"order_rows\": {\r",
+									"                            \"$id\": \"#/properties/order/properties/associations/properties/order_rows\",\r",
+									"                            \"type\": \"array\",\r",
+									"                            \"title\": \"The order_rows schema\",\r",
+									"                            \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                            \"default\": [],\r",
+									"                            \"examples\": [\r",
+									"                                [\r",
+									"                                    {\r",
+									"                                        \"id\": \"864\",\r",
+									"                                        \"product_id\": \"852\",\r",
+									"                                        \"product_attribute_id\": \"0\",\r",
+									"                                        \"product_quantity\": \"896.00\",\r",
+									"                                        \"product_name\": \"Труба профильная 60х60х2,0\",\r",
+									"                                        \"product_reference\": \"852\",\r",
+									"                                        \"product_ean13\": \"\",\r",
+									"                                        \"product_upc\": \"\",\r",
+									"                                        \"product_price\": \"10.500000\",\r",
+									"                                        \"unit_price_tax_incl\": \"10.500000\",\r",
+									"                                        \"unit_price_tax_excl\": \"10.500000\"\r",
+									"                                    }\r",
+									"                                ]\r",
+									"                            ],\r",
+									"                            \"additionalItems\": true,\r",
+									"                            \"items\": {\r",
+									"                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items\",\r",
+									"                                \"anyOf\": [\r",
+									"                                    {\r",
+									"                                        \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0\",\r",
+									"                                        \"type\": \"object\",\r",
+									"                                        \"title\": \"The first anyOf schema\",\r",
+									"                                        \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                        \"default\": {},\r",
+									"                                        \"examples\": [\r",
+									"                                            {\r",
+									"                                                \"id\": \"864\",\r",
+									"                                                \"product_id\": \"852\",\r",
+									"                                                \"product_attribute_id\": \"0\",\r",
+									"                                                \"product_quantity\": \"896.00\",\r",
+									"                                                \"product_name\": \"Труба профильная 60х60х2,0\",\r",
+									"                                                \"product_reference\": \"852\",\r",
+									"                                                \"product_ean13\": \"\",\r",
+									"                                                \"product_upc\": \"\",\r",
+									"                                                \"product_price\": \"10.500000\",\r",
+									"                                                \"unit_price_tax_incl\": \"10.500000\",\r",
+									"                                                \"unit_price_tax_excl\": \"10.500000\"\r",
+									"                                            }\r",
+									"                                        ],\r",
+									"                                        \"required\": [\r",
+									"                                            \"id\",\r",
+									"                                            \"product_id\",\r",
+									"                                            \"product_attribute_id\",\r",
+									"                                            \"product_quantity\",\r",
+									"                                            \"product_name\",\r",
+									"                                            \"product_reference\",\r",
+									"                                            \"product_ean13\",\r",
+									"                                            \"product_upc\",\r",
+									"                                            \"product_price\",\r",
+									"                                            \"unit_price_tax_incl\",\r",
+									"                                            \"unit_price_tax_excl\"\r",
+									"                                        ],\r",
+									"                                        \"properties\": {\r",
+									"                                            \"id\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/id\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The id schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"864\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_id\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_id\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_id schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"852\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_attribute_id\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_attribute_id\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_attribute_id schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"0\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_quantity\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_quantity\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_quantity schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"896.00\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_name\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_name\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_name schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"Труба профильная 60х60х2,0\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_reference\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_reference\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_reference schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"852\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_ean13\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_ean13\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_ean13 schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_upc\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_upc\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_upc schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"product_price\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/product_price\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The product_price schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"10.500000\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"unit_price_tax_incl\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/unit_price_tax_incl\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The unit_price_tax_incl schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"10.500000\"\r",
+									"                                                ]\r",
+									"                                            },\r",
+									"                                            \"unit_price_tax_excl\": {\r",
+									"                                                \"$id\": \"#/properties/order/properties/associations/properties/order_rows/items/anyOf/0/properties/unit_price_tax_excl\",\r",
+									"                                                \"type\": \"string\",\r",
+									"                                                \"title\": \"The unit_price_tax_excl schema\",\r",
+									"                                                \"description\": \"An explanation about the purpose of this instance.\",\r",
+									"                                                \"default\": \"\",\r",
+									"                                                \"examples\": [\r",
+									"                                                    \"10.500000\"\r",
+									"                                                ]\r",
+									"                                            }\r",
+									"                                        },\r",
+									"                                        \"additionalProperties\": true\r",
+									"                                    }\r",
+									"                                ]\r",
+									"                            }\r",
+									"                        }\r",
+									"                    },\r",
+									"                    \"additionalProperties\": true\r",
+									"                }\r",
+									"            },\r",
+									"            \"additionalProperties\": true\r",
+									"        }\r",
+									"    },\r",
+									"    \"additionalProperties\": true\r",
+									"} \r",
+									"\r",
+									"\r",
+									"\r",
+									"\r",
+									"pm.test('Schema is valid', function () {\r",
+									"    pm.expect(tv4.validate(jsonData, schema)).to.be.true;\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": 547,\r\n        \"id_address_delivery\": \"1957\",\r\n        \"id_address_invoice\": \"1957\",\r\n        \"id_cart\": \"6253\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"10696\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": null,\r\n        \"module\": \"cashondelivery\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"Cash on delivery (COD)\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"9408\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"9408\",\r\n        \"total_products\": \"9408\",\r\n        \"total_products_wt\": \"9408\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"864\",\r\n                    \"product_id\": \"852\",\r\n                    \"product_attribute_id\": \"0\",\r\n                    \"product_quantity\": \"896.00\",\r\n                    \"product_name\": \"Труба профильная 60х60х2,0\",\r\n                    \"product_reference\": \"852\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"10.500000\",\r\n                    \"unit_price_tax_incl\": \"10.500000\",\r\n                    \"unit_price_tax_excl\": \"10.500000\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/orders/{{order_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"orders",
+								"{{order_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Визуальная проверка response созданного заказа."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Delete",
+			"item": [
+				{
+					"name": "Delete order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_cart\": \"{{cart_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": \"\",\r\n        \"module\": \"{{Module_payment}}\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"{{order_payment}}\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"{{product_sum}}\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"{{product_sum}}\",\r\n        \"total_products\": \"{{product_sum}}\",\r\n        \"total_products_wt\": \"{{product_sum}}\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"\",\r\n                    \"product_id\": \"\",\r\n                    \"product_attribute_id\": \"\",\r\n                    \"product_quantity\": \"\",\r\n                    \"product_name\": \"\",\r\n                    \"product_reference\": \"\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"\",\r\n                    \"unit_price_tax_incl\": \"\",\r\n                    \"unit_price_tax_excl\": \"\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/orders/{{order_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"orders",
+								"{{order_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_cart\": \"{{cart_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": \"\",\r\n        \"module\": \"{{Module_payment}}\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"{{order_payment}}\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"{{product_sum}}\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"{{product_sum}}\",\r\n        \"total_products\": \"{{product_sum}}\",\r\n        \"total_products_wt\": \"{{product_sum}}\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"\",\r\n                    \"product_id\": \"\",\r\n                    \"product_attribute_id\": \"\",\r\n                    \"product_quantity\": \"\",\r\n                    \"product_name\": \"\",\r\n                    \"product_reference\": \"\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"\",\r\n                    \"unit_price_tax_incl\": \"\",\r\n                    \"unit_price_tax_excl\": \"\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/carts/{{cart_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"carts",
+								"{{cart_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_cart\": \"{{cart_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": \"\",\r\n        \"module\": \"{{Module_payment}}\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"{{order_payment}}\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"{{product_sum}}\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"{{product_sum}}\",\r\n        \"total_products\": \"{{product_sum}}\",\r\n        \"total_products_wt\": \"{{product_sum}}\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"\",\r\n                    \"product_id\": \"\",\r\n                    \"product_attribute_id\": \"\",\r\n                    \"product_quantity\": \"\",\r\n                    \"product_name\": \"\",\r\n                    \"product_reference\": \"\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"\",\r\n                    \"unit_price_tax_incl\": \"\",\r\n                    \"unit_price_tax_excl\": \"\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/addresses/{{address_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"addresses",
+								"{{address_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "query",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "ws_key",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Io-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Output-Format",
+								"value": "JSON",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded; charset=UTF-8",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\": {\r\n        \"id\": \"\",\r\n        \"id_address_delivery\": \"{{address_id}}\",\r\n        \"id_address_invoice\": \"{{address_id}}\",\r\n        \"id_cart\": \"{{cart_id}}\",\r\n        \"id_currency\": \"1\",\r\n        \"id_lang\": \"1\",\r\n        \"id_customer\": \"{{customer_id}}\",\r\n        \"id_carrier\": \"18\",\r\n        \"current_state\": \"\",\r\n        \"module\": \"{{Module_payment}}\",\r\n        \"invoice_number\": \"\",\r\n        \"invoice_date\": \"\",\r\n        \"delivery_number\": \"\",\r\n        \"delivery_date\": \"\",\r\n        \"valid\": \"\",\r\n        \"date_add\": \"\",\r\n        \"date_upd\": \"\",\r\n        \"shipping_number\": \"\",\r\n        \"id_shop_group\": \"\",\r\n        \"id_shop\": \"\",\r\n        \"secure_key\": \"\",\r\n        \"payment\": \"{{order_payment}}\",\r\n        \"recyclable\": \"\",\r\n        \"gift\": \"\",\r\n        \"gift_message\": \"\",\r\n        \"mobile_theme\": \"\",\r\n        \"total_discounts\": \"\",\r\n        \"total_discounts_tax_incl\": \"\",\r\n        \"total_discounts_tax_excl\": \"\",\r\n        \"total_paid\": \"{{product_sum}}\",\r\n        \"total_paid_tax_incl\": \"\",\r\n        \"total_paid_tax_excl\": \"\",\r\n        \"total_paid_real\": \"{{product_sum}}\",\r\n        \"total_products\": \"{{product_sum}}\",\r\n        \"total_products_wt\": \"{{product_sum}}\",\r\n        \"total_shipping\": \"\",\r\n        \"total_shipping_tax_incl\": \"\",\r\n        \"total_shipping_tax_excl\": \"\",\r\n        \"carrier_tax_rate\": \"\",\r\n        \"total_wrapping\": \"\",\r\n        \"total_wrapping_tax_incl\": \"\",\r\n        \"total_wrapping_tax_excl\": \"\",\r\n        \"round_mode\": \"\",\r\n        \"round_type\": \"\",\r\n        \"conversion_rate\": \"1.000000\",\r\n        \"reference\": \"\",\r\n        \"associations\": {\r\n            \"order_rows\": [\r\n                {\r\n                    \"id\": \"\",\r\n                    \"product_id\": \"\",\r\n                    \"product_attribute_id\": \"\",\r\n                    \"product_quantity\": \"\",\r\n                    \"product_name\": \"\",\r\n                    \"product_reference\": \"\",\r\n                    \"product_ean13\": \"\",\r\n                    \"product_upc\": \"\",\r\n                    \"product_price\": \"\",\r\n                    \"unit_price_tax_incl\": \"\",\r\n                    \"unit_price_tax_excl\": \"\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{http_schema}}{{url}}/customers/{{customer_id}}",
+							"host": [
+								"{{http_schema}}{{url}}"
+							],
+							"path": [
+								"customers",
+								"{{customer_id}}"
+							],
+							"query": [
+								{
+									"key": "io_format",
+									"value": "JSON/customers/42",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "in",
+				"value": "query",
+				"type": "string"
+			},
+			{
+				"key": "value",
+				"value": "J5KFFIZNCZNULNWK8SU3R5EWNEDA8BRR",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "ws_key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Module_payment",
+			"value": "cashondelivery"
+		},
+		{
+			"key": "order_payment",
+			"value": "Cash on delivery (COD)"
+		},
+		{
+			"key": "url",
+			"value": "xn--h1afidfjhm.xn--90ais/api"
+		},
+		{
+			"key": "http_schema",
+			"value": "https://"
+		}
+	]
+}
